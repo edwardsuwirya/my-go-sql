@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 )
 
 type dbConf struct {
@@ -20,12 +21,12 @@ type Config struct {
 func NewConfig() *Config {
 	return &Config{
 		dbConf: &dbConf{
-			dbUser:     "root",
-			dbPassword: "P@ssw0rd",
-			dbHost:     "localhost",
-			dbPort:     "3306",
-			schema:     "enigma",
-			dbEngine:   "mysql",
+			dbUser:     os.Getenv("dbuser"),
+			dbPassword: os.Getenv("dbpassword"),
+			dbHost:     os.Getenv("dbhost"),
+			dbPort:     os.Getenv("dbport"),
+			schema:     os.Getenv("dbschema"),
+			dbEngine:   os.Getenv("dbengine"),
 		},
 	}
 }
