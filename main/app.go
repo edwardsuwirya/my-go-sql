@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"myfirstgosql/config"
-	"myfirstgosql/deliveries"
 	"myfirstgosql/models"
 	"myfirstgosql/repositories"
 	"myfirstgosql/usecases"
@@ -29,16 +28,30 @@ func newApp() app {
 func (a app) run() {
 	repo := repositories.NewProductRepository(a.db)
 	usecase := usecases.NewProductUseCase(repo)
-	productDelivery := deliveries.NewProductDelivery()
+	//productDelivery := deliveries.NewProductDelivery()
+	//
+	//newProduct, err := usecase.RegisterNewProduct(models.Product{
+	//	ProductCode: "GLG",
+	//	ProductName: "Sabun Mandi",
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//productDelivery.PrintOneProduct(newProduct)
 
-	newProduct, err := usecase.RegisterNewProduct(models.Product{
-		ProductCode: "GLG",
-		ProductName: "Sabun Mandi",
+	_, err := usecase.RegisterNewProductWithPrice(models.ProductWithPrice{
+		Product: models.Product{
+			ProductCode: "BVV",
+			ProductName: "Penanak Nasi",
+		},
+		ProductPrice: models.ProductPrice{
+			Price: 137000,
+		},
 	})
 	if err != nil {
 		panic(err)
 	}
-	productDelivery.PrintOneProduct(newProduct)
+
 	//
 	//fmt.Println("======= Simple Query =======")
 	//result, err := usecase.GetProductPaging(1, 3)

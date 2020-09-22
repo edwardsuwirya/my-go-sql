@@ -9,3 +9,8 @@ type Product struct {
 type TotalProduct struct {
 	Count int64
 }
+
+type ProductWithPrice struct {
+	Product
+	ProductPrice
+}

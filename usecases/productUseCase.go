@@ -11,6 +11,7 @@ type IProductUseCase interface {
 	GetProductPaging(pageNo, totalPerPage int) ([]*models.Product, error)
 	GetTotalProduct() (int64, error)
 	RegisterNewProduct(product models.Product) (*models.Product, error)
+	RegisterNewProductWithPrice(productWithPrice models.ProductWithPrice) (*models.ProductWithPrice, error)
 }
 
 type ProductUseCase struct {
@@ -52,4 +53,8 @@ func (p *ProductUseCase) GetProductPaging(pageNo, totalPerPage int) ([]*models.P
 }
 func (p *ProductUseCase) GetTotalProduct() (int64, error) {
 	return p.repo.Count()
+}
+
+func (p *ProductUseCase) RegisterNewProductWithPrice(productWithPrice models.ProductWithPrice) (*models.ProductWithPrice, error) {
+	return p.repo.InsertProductWithPrice(productWithPrice)
 }

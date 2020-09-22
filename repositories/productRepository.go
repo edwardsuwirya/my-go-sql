@@ -10,6 +10,8 @@ import (
 
 type IProductRepository interface {
 	Insert(product models.Product) (*models.Product, error)
+	InsertPrice(productPrice models.ProductPrice) (*models.ProductPrice, error)
+	InsertProductWithPrice(productWithPrice models.ProductWithPrice) (*models.ProductWithPrice, error)
 	FindOneById(id string) (*models.Product, error)
 	FindAllByNameLike(name string) ([]*models.Product, error)
 	FindAllProductPaging(pageNo, totalPerPage int) ([]*models.Product, error)
@@ -22,6 +24,7 @@ var (
 		"productFindAllByNameLike":    "select id,product_code,product_name from m_product where product_name like ?",
 		"productFindAllProductPaging": "select id,product_code,product_name from m_product order by id limit ?,?",
 		"insertProduct":               "insert into m_product(id,product_code,product_name) values(?,?,?)",
+		"insertProductPrice":          "insert into m_product_price(product_price_id,product_id,product_price,is_active) values(?,?,?,?)",
 	}
 )
 
@@ -43,6 +46,35 @@ func NewProductRepository(db *sql.DB) IProductRepository {
 		db, ps,
 	}
 }
+
+func (r *ProductRepository) InsertProductWithPrice(productWithPrice models.ProductWithPrice) (*models.ProductWithPrice, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	prodId := guuid.New().String()
+	priceId := guuid.New().String()
+	_, err = tx.Stmt(r.ps["insertProduct"]).Exec(prodId, productWithPrice.ProductCode, productWithPrice.ProductName)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	_, err = tx.Stmt(r.ps["insertProductPrice"]).Exec(priceId, prodId, productWithPrice.Price, "0")
+	if err != nil {
+		fmt.Println("...???", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
+	}
+	productWithPrice.Id = prodId
+	productWithPrice.PriceId = prodId
+	return &productWithPrice, nil
+
+}
 func (r *ProductRepository) Insert(product models.Product) (*models.Product, error) {
 	id := guuid.New()
 	product.Id = id.String()
@@ -56,6 +88,20 @@ func (r *ProductRepository) Insert(product models.Product) (*models.Product, err
 		return nil, errors.New(fmt.Sprintf("%s:%v", "Insert failed", err))
 	}
 	return &product, nil
+}
+
+func (r *ProductRepository) InsertPrice(productPrice models.ProductPrice) (*models.ProductPrice, error) {
+	id := guuid.New()
+	productPrice.PriceId = id.String()
+	res, err := r.ps["insertProductPrice"].Exec(productPrice.PriceId, productPrice.ProductId, productPrice.Price, "0")
+	if err != nil {
+		return nil, err
+	}
+	affectedNo, err := res.RowsAffected()
+	if err != nil || affectedNo == 0 {
+		return nil, errors.New(fmt.Sprintf("%s:%v", "Insert failed", err))
+	}
+	return &productPrice, nil
 }
 
 func (r *ProductRepository) FindOneById(id string) (*models.Product, error) {
