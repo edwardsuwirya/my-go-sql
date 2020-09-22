@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	guuid "github.com/google/uuid"
+	"myfirstgosql/config"
 	"myfirstgosql/models"
 )
 
@@ -29,44 +30,44 @@ var (
 )
 
 type ProductRepository struct {
-	db *sql.DB
-	ps map[string]*sql.Stmt
+	session *config.Session
+	ps      map[string]*sql.Stmt
 }
 
-func NewProductRepository(db *sql.DB) IProductRepository {
+func NewProductRepository(sf *config.SessionFactory) IProductRepository {
 	ps := make(map[string]*sql.Stmt, len(productQueries))
+	prodRepo := &ProductRepository{
+		sf.GetSession(), ps,
+	}
 	for n, v := range productQueries {
-		p, err := db.Prepare(v)
+		p, err := prodRepo.session.Prepare(v)
 		if err != nil {
 			panic(err)
 		}
 		ps[n] = p
 	}
-	return &ProductRepository{
-		db, ps,
-	}
+	return prodRepo
 }
 
 func (r *ProductRepository) InsertProductWithPrice(productWithPrice models.ProductWithPrice) (*models.ProductWithPrice, error) {
-	tx, err := r.db.Begin()
+	err := r.session.Begin()
 	if err != nil {
 		panic(err)
 	}
 	prodId := guuid.New().String()
 	priceId := guuid.New().String()
-	_, err = tx.Stmt(r.ps["insertProduct"]).Exec(prodId, productWithPrice.ProductCode, productWithPrice.ProductName)
+	_, err = r.session.ExecStatement(r.ps["insertProduct"], prodId, productWithPrice.ProductCode, productWithPrice.ProductName)
 	if err != nil {
-		tx.Rollback()
+		r.session.Rollback()
 		return nil, err
 	}
-	_, err = tx.Stmt(r.ps["insertProductPrice"]).Exec(priceId, prodId, productWithPrice.Price, "0")
+	_, err = r.session.ExecStatement(r.ps["insertProductPrice"], priceId, prodId, productWithPrice.Price, "0")
 	if err != nil {
-		fmt.Println("...???", err)
-		tx.Rollback()
+		r.session.Rollback()
 		return nil, err
 	}
 
-	err = tx.Commit()
+	err = r.session.Commit()
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +79,7 @@ func (r *ProductRepository) InsertProductWithPrice(productWithPrice models.Produ
 func (r *ProductRepository) Insert(product models.Product) (*models.Product, error) {
 	id := guuid.New()
 	product.Id = id.String()
-	res, err := r.ps["insertProduct"].Exec(product.Id, product.ProductCode, product.ProductName)
+	res, err := r.session.ExecStatement(r.ps["insertProduct"], product.Id, product.ProductCode, product.ProductName)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +94,7 @@ func (r *ProductRepository) Insert(product models.Product) (*models.Product, err
 func (r *ProductRepository) InsertPrice(productPrice models.ProductPrice) (*models.ProductPrice, error) {
 	id := guuid.New()
 	productPrice.PriceId = id.String()
-	res, err := r.ps["insertProductPrice"].Exec(productPrice.PriceId, productPrice.ProductId, productPrice.Price, "0")
+	res, err := r.session.ExecStatement(r.ps["insertProductPrice"], productPrice.PriceId, productPrice.ProductId, productPrice.Price, "0")
 	if err != nil {
 		return nil, err
 	}
@@ -105,21 +106,16 @@ func (r *ProductRepository) InsertPrice(productPrice models.ProductPrice) (*mode
 }
 
 func (r *ProductRepository) FindOneById(id string) (*models.Product, error) {
-	rows, err := r.ps["productFindOneById"].Query(id)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
+	row := r.session.QueryRowStatement(r.ps["productFindOneById"], id)
 	res := new(models.Product)
-	err = rows.Scan(&res.Id, &res.ProductCode, &res.ProductName)
+	err := row.Scan(&res.Id, &res.ProductCode, &res.ProductName)
 	if err != nil {
 		panic(err)
 	}
 	return res, nil
 }
 func (r *ProductRepository) FindAllByNameLike(name string) ([]*models.Product, error) {
-	rows, err := r.ps["productFindAllByNameLike"].Query(name)
+	rows, err := r.session.QueryStatement(r.ps["productFindAllByNameLike"], name)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +133,7 @@ func (r *ProductRepository) FindAllByNameLike(name string) ([]*models.Product, e
 	return result, nil
 }
 func (r *ProductRepository) FindAllProductPaging(pageNo, totalPerPage int) ([]*models.Product, error) {
-	rows, err := r.ps["productFindAllProductPaging"].Query(pageNo, totalPerPage)
+	rows, err := r.session.QueryStatement(r.ps["productFindAllProductPaging"], pageNo, totalPerPage)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +151,7 @@ func (r *ProductRepository) FindAllProductPaging(pageNo, totalPerPage int) ([]*m
 	return result, nil
 }
 func (r *ProductRepository) Count() (int64, error) {
-	row := r.db.QueryRow("select count(id) from m_product")
+	row := r.session.QueryRow("select count(id) from m_product")
 	res := new(models.TotalProduct)
 	err := row.Scan(&res.Count)
 	if err != nil {
