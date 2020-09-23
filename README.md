@@ -17,4 +17,10 @@ docker images
 ```
 docker run -it -e dbuser=root -e dbpassword=P@ssw0rd -e dbhost=host.docker.internal -e dbport=3306 -e dbschema=enigma -e dbengine=mysql --name mygosql --rm my-go-sql
 ```
+or using docker compose
+(the environment variables information is provided in .env files)
+```
+docker-compose up --build
+docker-compose down
+```
 You should get the result on console
