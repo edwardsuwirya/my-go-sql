@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/urfave/cli/v2"
 	"myfirstgosql/config"
 	"myfirstgosql/deliveries"
 	"myfirstgosql/repositories"
 	"myfirstgosql/usecases"
+	"os"
 )
 
 type app struct {
@@ -25,6 +27,9 @@ func newApp() app {
 	return myapp
 }
 
+func (a app) runMigration() {
+	dbMigration(a.sf)
+}
 func (a app) run() {
 	repo := repositories.NewProductRepository(a.sf)
 	usecase := usecases.NewProductUseCase(repo)
@@ -58,6 +63,7 @@ func (a app) run() {
 		panic(err)
 	}
 	productDelivery.PrintProduct(result)
+
 	//
 	//fmt.Println("======= Query with parameter =======")
 	//queryFilter := "%Meja%"
@@ -84,5 +90,47 @@ func (a app) run() {
 
 }
 func main() {
-	newApp().run()
+	ascii :=
+		`
+ _______         __                       
+|    ___|.-----.|__|.-----.--------.---.-.
+|    ___||     ||  ||  _  |        |  _  |
+|_______||__|__||__||___  |__|__|__|___._|
+                    |_____|
+
+My Go SQL
+
+`
+	fmt.Println(ascii)
+	appConfig := &cli.App{
+		Name:        config.GetEnv("appname", "My Go Project"),
+		Version:     config.GetEnv("appversion", "0.0.0"),
+		Description: config.GetEnv("apptag", ""),
+		Action: func(c *cli.Context) error {
+			return nil
+		},
+		Commands: []*cli.Command{
+			{
+				Name:    "cli",
+				Aliases: []string{"c"},
+				Usage:   "Run console based application",
+				Action: func(c *cli.Context) error {
+					newApp().run()
+					return nil
+				},
+			}, {
+				Name:    "migration",
+				Aliases: []string{"d"},
+				Usage:   "Run database migration",
+				Action: func(c *cli.Context) error {
+					newApp().runMigration()
+					return nil
+				},
+			},
+		},
+	}
+	err := appConfig.Run(os.Args)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -2,6 +2,19 @@
 
 Go x DB simple project
 
+## Simple run with go command
+To run the application with console based mode
+```go
+go run myfirstgosql/main c
+```
+If you want to do database simple migration
+```go
+go run myfirstgosql/main d
+```
+To view Some help
+```go
+go run myfirstgosql/main --help
+```
 ## Docker build
 ```
 docker build . -t my-go-sql

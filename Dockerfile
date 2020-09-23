@@ -12,4 +12,4 @@ COPY . .
 RUN go mod tidy
 RUN go build -o $app myfirstgosql/main
 
-ENTRYPOINT ./$app
+ENTRYPOINT ./$app c
