@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+ console:
+  build: 
+   context: .
+   args:
+    - appName=${appname}
+    - appVersion=${appversion}
+  image: ${appname}:${appversion}
+  environment:
+   dbuser: ${dbuser}
+   dbpassword: ${dbpassword}
+   dbhost: ${dbhost}
+   dbport: ${dbport}
+   dbschema: ${dbschema}
+   dbengine: ${dbengine}
