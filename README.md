@@ -1,4 +1,4 @@
-#My Go SQL
+# My Go SQL
 
 Go x DB simple project
 
