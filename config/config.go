@@ -43,6 +43,7 @@ func (c *Config) InitDb() error {
 }
 
 func (c *Config) GetEnv(key, defaultValue string) string {
+	viper.AutomaticEnv()
 	viper.AddConfigPath(".")
 	e := c.env
 	if e == "" {
@@ -53,8 +54,6 @@ func (c *Config) GetEnv(key, defaultValue string) string {
 		viper.SetConfigType("env")
 		viper.SetConfigName(f)
 	}
-
-	viper.AutomaticEnv()
 	viper.ReadInConfig()
 
 	if envVal := viper.GetString(key); len(envVal) != 0 {

@@ -11,6 +11,22 @@ If you want to do database simple migration
 ```go
 go run myfirstgosql/main d
 ```
+
+If you want to select a specific environment
+```go
+go run myfirstgosql/main --env dev c
+```
+Please make sure you have dev.env file, if the file is not exist
+it will try to read operating system environment variable,
+and if the environment variable does not have the required info, then
+the app default value will be taken.
+
+The default is try to read .env file, if you do not use --env option.
+If the .env file is not exist, the same behaviour like statement above.
+
+In the production environment, usually we provide the config in operating system
+environment variables.
+
 To view Some help
 ```go
 go run myfirstgosql/main --help
