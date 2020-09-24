@@ -5,18 +5,16 @@ services:
     build:
       context: .
       args:
-        - appName=${appname}
-        - appVersion=${appversion}
-        - port=${httpport}
-    image: ${appname}:${appversion}
+        - appName=${APPNAME}
+        - appVersion=${APPVERSION}
+        - port=${HTTPPORT}
+    image: docker.pkg.github.com/edwardsuwirya/my-go-sql-docker/${APPNAME}:${APPVERSION}
     ports:
-      - "${httpport}:${httpport}"
+      - "${HTTPPORT}:${HTTPPORT}"
     environment:
-      dbuser: ${dbuser}
-      dbpassword: ${dbpassword}
-      dbhost: ${dbhost}
-      dbport: ${dbport}
-      dbschema: ${dbschema}
-      dbengine: ${dbengine}
-      httphost: ${httphost}
-      httpport: ${httpport}
+      DBUSER: ${DBUSER}
+      DBPASSWORD: ${DBPASSWORD}
+      DBHOST: ${DBHOST}
+      DBPORT: ${DBPORT}
+      DBSCHEMA: ${DBSCHEMA}
+      DBENGINE: ${DBENGINE}

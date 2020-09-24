@@ -1,0 +1,5 @@
+.env
+dev.env
+docker-compose.yml
+Dockerfile
+GH_TOKEN.txt

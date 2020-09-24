@@ -38,6 +38,7 @@ func newApp(cliCtx *cli.Context) app {
 }
 
 func (a app) runApi() {
+	fmt.Println("Run HTTP Mode")
 	appRouter := mux.NewRouter()
 	hostListen := fmt.Sprintf("%v:%v", a.cfg.HttpConf.Host, a.cfg.HttpConf.Port)
 	deliveries.NewAppDelivery(appRouter, a.cfg.SessionFactory).Initialize()
@@ -48,9 +49,12 @@ func (a app) runApi() {
 }
 
 func (a app) runMigration() {
+	fmt.Println("Run Migration Mode")
+	fmt.Printf("%s schema %s\n", a.cfg.GetEnv("dbhost", ""), a.cfg.GetEnv("dbschema", ""))
 	dbMigration(a.cfg.SessionFactory)
 }
 func (a app) run() {
+	fmt.Println("Run CLI Mode")
 	repo := repositories.NewProductRepository(a.cfg.SessionFactory)
 	usecase := usecases.NewProductUseCase(repo)
 	productDelivery := deliveries.NewProductDelivery()
@@ -127,40 +131,33 @@ My Go SQL
 		Version:     appVersion,
 		Description: appTag,
 		Action: func(c *cli.Context) error {
+			switch c.String("mode") {
+			case "cli":
+				newApp(c).run()
+			case "migration":
+				newApp(c).runMigration()
+			case "http":
+				newApp(c).runApi()
+			default:
+				panic("Unknown mode")
+			}
 			return nil
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "env",
+				Aliases:     []string{"e"},
+				EnvVars:     []string{"APPENV"},
 				Usage:       "Application's environment",
 				DefaultText: "dev",
 			},
-		},
-		Commands: []*cli.Command{
-			{
-				Name:    "cli",
-				Aliases: []string{"c"},
-				Usage:   "Run console based application",
-				Action: func(c *cli.Context) error {
-					newApp(c).run()
-					return nil
-				},
-			}, {
-				Name:    "migration",
-				Aliases: []string{"d"},
-				Usage:   "Run database migration",
-				Action: func(c *cli.Context) error {
-					newApp(c).runMigration()
-					return nil
-				},
-			}, {
-				Name:    "http",
-				Aliases: []string{"h"},
-				Usage:   "Run REST based application",
-				Action: func(c *cli.Context) error {
-					newApp(c).runApi()
-					return nil
-				},
+			&cli.StringFlag{
+				Name:        "mode",
+				Usage:       "Application's running mode, options are cli, migration, http",
+				Aliases:     []string{"m"},
+				EnvVars:     []string{"APPMODE"},
+				DefaultText: "http",
+				Value:       "http",
 			},
 		},
 	}
