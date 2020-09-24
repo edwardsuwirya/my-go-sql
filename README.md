@@ -5,16 +5,16 @@ Go x DB simple project
 ## Simple run with go command
 To run the application with console based mode
 ```go
-go run myfirstgosql/main c
+go run myfirstgosql/main --mode cli
 ```
 If you want to do database simple migration
 ```go
-go run myfirstgosql/main d
+go run myfirstgosql/main --mode migration
 ```
 
 If you want to select a specific environment
 ```go
-go run myfirstgosql/main --env dev c
+go run myfirstgosql/main --env dev --mode cli
 ```
 Please make sure you have dev.env file, if the file is not exist
 it will try to read operating system environment variable,
@@ -44,7 +44,7 @@ docker images
 
 #Test run
 ```
-docker run -it -e dbuser=root -e dbpassword=P@ssw0rd -e dbhost=host.docker.internal -e dbport=3306 -e dbschema=enigma -e dbengine=mysql --name mygosql --rm my-go-sql
+docker run -it -e DBUSER=root -e DBPASSWORD=P@ssw0rd -e DBHOST=host.docker.internal -e DBPORT=3306 -e DBSCHEMA=enigma -e DBENGINE=mysql -e APPMODE=cli --name mygosql --rm my-go-sql
 ```
 or using docker compose
 (the environment variables information is provided in .env files)
