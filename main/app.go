@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 	"github.com/urfave/cli/v2"
+	"log"
 	"myfirstgosql/config"
 	"myfirstgosql/deliveries"
 	"myfirstgosql/repositories"
 	"myfirstgosql/usecases"
+	"net/http"
 	"os"
 )
 
@@ -18,7 +21,7 @@ var (
 )
 
 type app struct {
-	sf *config.SessionFactory
+	cfg *config.Config
 }
 
 func newApp(cliCtx *cli.Context) app {
@@ -29,16 +32,26 @@ func newApp(cliCtx *cli.Context) app {
 		panic(err)
 	}
 	myapp := app{
-		sf: c.SessionFactory,
+		cfg: c,
 	}
 	return myapp
 }
 
+func (a app) runApi() {
+	appRouter := mux.NewRouter()
+	hostListen := fmt.Sprintf("%v:%v", a.cfg.HttpConf.Host, a.cfg.HttpConf.Port)
+	deliveries.NewAppDelivery(appRouter, a.cfg.SessionFactory).Initialize()
+	log.Printf("Ready to listen on %v", hostListen)
+	if err := http.ListenAndServe(hostListen, appRouter); err != nil {
+		log.Panic(err)
+	}
+}
+
 func (a app) runMigration() {
-	dbMigration(a.sf)
+	dbMigration(a.cfg.SessionFactory)
 }
 func (a app) run() {
-	repo := repositories.NewProductRepository(a.sf)
+	repo := repositories.NewProductRepository(a.cfg.SessionFactory)
 	usecase := usecases.NewProductUseCase(repo)
 	productDelivery := deliveries.NewProductDelivery()
 	//
@@ -138,6 +151,14 @@ My Go SQL
 				Usage:   "Run database migration",
 				Action: func(c *cli.Context) error {
 					newApp(c).runMigration()
+					return nil
+				},
+			}, {
+				Name:    "http",
+				Aliases: []string{"h"},
+				Usage:   "Run REST based application",
+				Action: func(c *cli.Context) error {
+					newApp(c).runApi()
 					return nil
 				},
 			},

@@ -2,6 +2,7 @@ FROM golang:alpine
 
 ARG appName
 ARG appVersion
+ARG port
 
 ENV app="$appName-$appVersion"
 RUN apk update && apk add git
@@ -12,4 +13,6 @@ COPY . .
 RUN go mod tidy
 RUN go build -o $app myfirstgosql/main
 
-ENTRYPOINT ./$app c
+EXPOSE $port
+
+ENTRYPOINT ./$app h

@@ -5,6 +5,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type HttpConf struct {
+	Host string
+	Port string
+}
 type dbConf struct {
 	dbUser     string
 	dbPassword string
@@ -16,6 +20,7 @@ type dbConf struct {
 type Config struct {
 	SessionFactory *SessionFactory
 	dbConf         *dbConf
+	HttpConf       *HttpConf
 	env            string
 }
 
@@ -28,6 +33,10 @@ func NewConfig(env string) *Config {
 		dbPort:     c.GetEnv("dbport", "3306"),
 		schema:     c.GetEnv("dbschema", "test"),
 		dbEngine:   c.GetEnv("dbengine", "mysql"),
+	}
+	c.HttpConf = &HttpConf{
+		Host: c.GetEnv("httphost", "localhost"),
+		Port: c.GetEnv("httpport", "8080"),
 	}
 	return c
 }
