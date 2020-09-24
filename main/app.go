@@ -11,12 +11,19 @@ import (
 	"os"
 )
 
+var (
+	appName    = "My Go Project"
+	appVersion = "0.0.1"
+	appTag     = "GO Sql Sample Project"
+)
+
 type app struct {
 	sf *config.SessionFactory
 }
 
-func newApp() app {
-	c := config.NewConfig()
+func newApp(cliCtx *cli.Context) app {
+	env := cliCtx.String("env")
+	c := config.NewConfig(env)
 	err := c.InitDb()
 	if err != nil {
 		panic(err)
@@ -103,11 +110,18 @@ My Go SQL
 `
 	fmt.Println(ascii)
 	appConfig := &cli.App{
-		Name:        config.GetEnv("appname", "My Go Project"),
-		Version:     config.GetEnv("appversion", "0.0.0"),
-		Description: config.GetEnv("apptag", ""),
+		Name:        appName,
+		Version:     appVersion,
+		Description: appTag,
 		Action: func(c *cli.Context) error {
 			return nil
+		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "env",
+				Usage:       "Application's environment",
+				DefaultText: "dev",
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -115,7 +129,7 @@ My Go SQL
 				Aliases: []string{"c"},
 				Usage:   "Run console based application",
 				Action: func(c *cli.Context) error {
-					newApp().run()
+					newApp(c).run()
 					return nil
 				},
 			}, {
@@ -123,7 +137,7 @@ My Go SQL
 				Aliases: []string{"d"},
 				Usage:   "Run database migration",
 				Action: func(c *cli.Context) error {
-					newApp().runMigration()
+					newApp(c).runMigration()
 					return nil
 				},
 			},
