@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	AUTH_MAIN_ROUTE    = "/auth"
 	PRODUCT_MAIN_ROUTE = "/product"
 )
 
@@ -27,6 +28,7 @@ func (a *AppDelivery) Initialize() {
 	//
 	routerList := []IAppRouter{
 		NewProductRoute(PRODUCT_MAIN_ROUTE, a.sf, a.rt),
+		NewAuthRoute(AUTH_MAIN_ROUTE, a.sf, a.rt),
 	}
 
 	for _, rt := range routerList {
