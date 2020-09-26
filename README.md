@@ -7,9 +7,16 @@ To run the application with console based mode
 ```go
 go run myfirstgosql/main --mode cli
 ```
-If you want to do database simple migration
+
+To run the application with http mode
 ```go
-go run myfirstgosql/main --mode migration
+go run myfirstgosql/main --mode http
+```
+
+If you want to do database simple migration. You can set the migration json file in environment variable
+```go
+go run myfirstgosql/main --mode migration-up
+go run myfirstgosql/main --mode migration-down
 ```
 
 If you want to select a specific environment
