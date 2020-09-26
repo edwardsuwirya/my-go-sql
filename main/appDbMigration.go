@@ -1,31 +1,49 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"myfirstgosql/config"
+	"os"
 )
 
-func dbMigration(sf *config.SessionFactory) {
+type migration struct {
+	Up   []migrationStatement `json:"up"`
+	Down []migrationStatement `json:"down"`
+}
+type migrationStatement struct {
+	Description string `json:"description"`
+	Statement   string `json:"statement"`
+}
+
+func dbMigration(sf *config.SessionFactory, jsonFile string, mode string) {
+	fmt.Println("Reading file ", jsonFile)
+	j, err := os.Open(jsonFile)
+	if err != nil {
+		panic(err)
+	}
+	defer j.Close()
+
+	jval, err := ioutil.ReadAll(j)
+	var mig migration
+	err = json.Unmarshal(jval, &mig)
+	if err != nil {
+		panic(err)
+	}
 	session := sf.GetSession()
-
-	fmt.Printf("%-30s %30s\n", "Creating M_CATEGORY table", "[OK]")
-	_, err := session.Exec("CREATE TABLE IF NOT EXISTS `m_category` (`id` char(36) NOT NULL,`category_name` varchar(255) DEFAULT NULL,`created_at` datetime DEFAULT CURRENT_TIMESTAMP,`updated_at` datetime DEFAULT CURRENT_TIMESTAMP,`deleted_at` datetime DEFAULT NULL,PRIMARY KEY (`id`))")
-	if err != nil {
-		fmt.Printf("%-30s %30s\n", "Creating M_CATEGORY table", "[FAILED]")
-		panic(err)
+	var migStmt = make([]migrationStatement, 0)
+	if mode == "up" {
+		migStmt = mig.Up
+	} else {
+		migStmt = mig.Down
 	}
-
-	fmt.Printf("%-30s %30s\n", "Creating M_PRODUCT table", "[OK]")
-	_, err = session.Exec("CREATE TABLE IF NOT EXISTS `m_product` (`id` char(36) NOT NULL,`product_code` varchar(255) NOT NULL,`product_name` varchar(255) NOT NULL,`created_at` datetime DEFAULT CURRENT_TIMESTAMP,`updated_at` datetime DEFAULT CURRENT_TIMESTAMP,`deleted_at` datetime DEFAULT NULL,`category_id` char(36) DEFAULT NULL,PRIMARY KEY (`id`),UNIQUE KEY `product_code_UNIQUE` (`product_code`),KEY `category_id` (`category_id`),CONSTRAINT `m_product_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `m_category` (`id`) ON DELETE SET NULL ON UPDATE CASCADE)")
-	if err != nil {
-		fmt.Printf("%-30s %30s\n", "Creating M_PRODUCT table", "[FAILED]")
-		panic(err)
-	}
-
-	fmt.Printf("%-30s %30s\n", "Creating M_PRODUCT_PRICE table", "[OK]")
-	_, err = session.Exec("CREATE TABLE IF NOT EXISTS `m_product_price` (`product_price_id` char(36) NOT NULL,`product_id` char(36) NOT NULL,`product_price` int NOT NULL DEFAULT '0',`is_active` varchar(1) DEFAULT '0',PRIMARY KEY (`product_price_id`))")
-	if err != nil {
-		fmt.Printf("%-30s %30s\n", "Creating M_PRODUCT_PRICE table", "[FAILED]")
-		panic(err)
+	for _, ms := range migStmt {
+		fmt.Printf("%-30s %30s\n", ms.Description, "[OK]")
+		_, err := session.Exec(ms.Statement)
+		if err != nil {
+			fmt.Printf("%-30s %30s\n", ms.Description, "[FAILED]")
+			panic(err)
+		}
 	}
 }

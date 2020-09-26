@@ -48,10 +48,11 @@ func (a app) runApi() {
 	}
 }
 
-func (a app) runMigration() {
+func (a app) runMigration(mode string) {
 	fmt.Println("Run Migration Mode")
 	fmt.Printf("%s schema %s\n", a.cfg.GetEnv("dbhost", ""), a.cfg.GetEnv("dbschema", ""))
-	dbMigration(a.cfg.SessionFactory)
+	migrationPath := a.cfg.GetEnv("DBMIGRATIONFILE", "")
+	dbMigration(a.cfg.SessionFactory, migrationPath, mode)
 }
 func (a app) run() {
 	fmt.Println("Run CLI Mode")
@@ -134,8 +135,10 @@ My Go SQL
 			switch c.String("mode") {
 			case "cli":
 				newApp(c).run()
-			case "migration":
-				newApp(c).runMigration()
+			case "migration-up":
+				newApp(c).runMigration("up")
+			case "migration-down":
+				newApp(c).runMigration("down")
 			case "http":
 				newApp(c).runApi()
 			default:
@@ -153,7 +156,7 @@ My Go SQL
 			},
 			&cli.StringFlag{
 				Name:        "mode",
-				Usage:       "Application's running mode, options are cli, migration, http",
+				Usage:       "Application's running mode, options are cli, migration-up,migration-down, http",
 				Aliases:     []string{"m"},
 				EnvVars:     []string{"APPMODE"},
 				DefaultText: "http",
