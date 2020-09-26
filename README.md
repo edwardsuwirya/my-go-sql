@@ -50,7 +50,7 @@ Check the build result, you should have my-go-sql in the list
 docker images 
 ```
 
-#Test run
+# Test run
 ```
 docker run -it -e DBUSER=root -e DBPASSWORD=P@ssw0rd -e DBHOST=host.docker.internal -e DBPORT=3306 -e DBSCHEMA=enigma -e DBENGINE=mysql -e APPMODE=cli --name mygosql --rm my-go-sql
 ```
