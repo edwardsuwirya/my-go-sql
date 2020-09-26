@@ -1,6 +1,7 @@
 # My Go SQL
-
 Go x DB simple project
+
+![alt text](https://enigmacamp.com/portal/assets/images/enigmacamp.jpeg)
 
 ## Simple run with go command
 To run the application with console based mode
